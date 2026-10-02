@@ -5,7 +5,7 @@ Indicador de carga **de pantalla completa** para todas las aplicaciones (web y m
 | | |
 |---|---|
 | **Versión** | 1.0.0 — 2026-10-02 |
-| **Origen** | Componente `app-loading` del portal *Business* (Angular 20 + Tailwind CSS 3.4), usado en Cuenta Corriente y otros 11 aplicativos |
+| **Origen** | Componente `app-loading` del portal *Business* (Angular 20 + Tailwind CSS 3.4) |
 | **Implementaciones** | 1) Angular + Tailwind (original, tal cual) · 2) Angular + CSS puro · 3) Flutter |
 
 Las tres implementaciones producen **exactamente el mismo resultado visual**. La 1 es copia literal del componente en producción. Las demás reproducen, propiedad por propiedad, el CSS que Tailwind 3.4 genera para esas clases.

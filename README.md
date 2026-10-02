@@ -5,10 +5,10 @@ Indicador de carga **de pantalla completa** para todas las aplicaciones (web y m
 | | |
 |---|---|
 | **Versión** | 1.0.0 — 2026-10-02 |
-| **Origen** | Componente `app-loading` del portal *Business* (Angular 20 + Tailwind CSS 3.4) |
-| **Implementaciones** | 1) Angular + Tailwind (original, tal cual) · 2) Angular + CSS puro · 3) HTML/JS sin framework · 4) Flutter |
+| **Origen** | Componente `app-loading` del portal *Business* (Angular 20 + Tailwind CSS 3.4), usado en Cuenta Corriente y otros 11 aplicativos |
+| **Implementaciones** | 1) Angular + Tailwind (original, tal cual) · 2) Angular + CSS puro · 3) Flutter |
 
-Las cuatro implementaciones producen **exactamente el mismo resultado visual**. La 1 es copia literal del componente en producción. Las demás reproducen, propiedad por propiedad, el CSS que Tailwind 3.4 genera para esas clases.
+Las tres implementaciones producen **exactamente el mismo resultado visual**. La 1 es copia literal del componente en producción. Las demás reproducen, propiedad por propiedad, el CSS que Tailwind 3.4 genera para esas clases.
 
 ---
 
@@ -18,12 +18,11 @@ Las cuatro implementaciones producen **exactamente el mismo resultado visual**. 
 2. [Cuándo usarlo (y cuándo no)](#2-cuándo-usarlo-y-cuándo-no)
 3. [Implementación 1 — Angular + Tailwind (original)](#3-implementación-1--angular--tailwind-original)
 4. [Implementación 2 — Angular + CSS puro (sin Tailwind)](#4-implementación-2--angular--css-puro-sin-tailwind)
-5. [Implementación 3 — HTML/JS sin framework](#5-implementación-3--htmljs-sin-framework)
-6. [Implementación 4 — Flutter](#6-implementación-4--flutter)
-7. [Patrón de uso y reglas](#7-patrón-de-uso-y-reglas)
-8. [Checklist de QA](#8-checklist-de-qa)
-9. [Observaciones conocidas del original](#9-observaciones-conocidas-del-original)
-10. [Mantenimiento del estándar](#10-mantenimiento-del-estándar)
+5. [Implementación 3 — Flutter](#5-implementación-3--flutter)
+6. [Patrón de uso y reglas](#6-patrón-de-uso-y-reglas)
+7. [Checklist de QA](#7-checklist-de-qa)
+8. [Observaciones conocidas del original](#8-observaciones-conocidas-del-original)
+9. [Mantenimiento del estándar](#9-mantenimiento-del-estándar)
 
 ---
 
@@ -41,7 +40,7 @@ Valores reales que produce el componente original (CSS generado por Tailwind 3.4
 | Desenfoque | `backdrop-filter: blur(4px)` | `backdrop-blur-sm` |
 | Transición | `transition: opacity 300ms cubic-bezier(0.4, 0, 0.2, 1)` (sin efecto visible: la opacidad nunca cambia) | `transition-opacity duration-300` |
 | Apilamiento | `z-index: 6000` | `style="z-index: 6000"` |
-| Cursor | Sin cambio (ver [§9](#9-observaciones-conocidas-del-original)) | `cursor-wait\|` (clase inválida) |
+| Cursor | Sin cambio (ver [§8](#8-observaciones-conocidas-del-original)) | `cursor-wait\|` (clase inválida) |
 
 ### 1.2 Bloque central (engranajes + texto)
 
@@ -532,54 +531,9 @@ Idénticos a [§3.6](#36-loadingcomponentspects), [§3.7](#37-traducciones) y [�
 
 ---
 
-## 5. Implementación 3 — HTML/JS sin framework
+## 5. Implementación 3 — Flutter
 
-Para aplicaciones web sin Angular (HTML/jQuery, Razor, React, Vue, etc.).
-
-1. Copiar el CSS de [§4.3](#43-loadingcomponentcss) a una hoja global (por ejemplo `loading.css`). Si el proyecto ya define otro `@keyframes spin` o `@keyframes fadeIn` **distinto**, renombrar ambos en este CSS (por ejemplo `lo-spin-kf`, `lo-fadeIn-kf`).
-2. Colocar el marcado de [§4.2](#42-loadingcomponenthtml) dentro de un `<template>`, cambiando solo la línea del texto `{{ ... }}` por el texto fijo (o el texto traducido por tu sistema de idiomas):
-
-```html
-<template id="tpl-loading">
-  <!-- Pegar aquí el <div class="lo-overlay" ...> completo de §4.2,
-       con la línea del texto reemplazada por:  Cargando datos...  -->
-</template>
-```
-
-3. Mostrar/ocultar:
-
-```html
-<script>
-  const Loading = {
-    nodo: null,
-    mostrar() {
-      if (this.nodo) return;
-      this.nodo = document.getElementById('tpl-loading').content.firstElementChild.cloneNode(true);
-      document.body.appendChild(this.nodo);
-    },
-    ocultar() {
-      if (this.nodo) this.nodo.remove();
-      this.nodo = null;
-    },
-  };
-
-  // Uso
-  async function guardar() {
-    Loading.mostrar();
-    try {
-      await fetch('/api/guardar', { method: 'POST', body: JSON.stringify(datos) });
-    } finally {
-      Loading.ocultar();
-    }
-  }
-</script>
-```
-
----
-
-## 6. Implementación 4 — Flutter
-
-### 6.1 ¿Se puede usar el mismo HTML?
+### 5.1 ¿Se puede usar el mismo HTML?
 
 No. Flutter no interpreta HTML ni CSS, y meter un `WebView` solo para esto sería pesado. Lo que sí se reutiliza son los **mismos trazos SVG**, con los mismos colores, centros de giro, velocidades, tamaños, separaciones y animación de entrada. Se dibujan con `flutter_svg`.
 
@@ -594,7 +548,7 @@ No. Flutter no interpreta HTML ni CSS, y meter un `WebView` solo para esto serí
 | Bloqueo | Capa que intercepta clics | `ModalBarrier` (toques) |
 | **Adaptaciones propias de móvil** | — | Bloquea el botón *atrás* (`PopScope`) y quita el foco/teclado al mostrarse. En móvil son la forma de “impedir acciones” que la web logra con la capa. |
 
-### 6.2 Requisitos
+### 5.2 Requisitos
 
 ```yaml
 # pubspec.yaml
@@ -607,7 +561,7 @@ dependencies:
 
 En Flutter < 3.16 reemplazar `PopScope(canPop: false, child: …)` por `WillPopScope(onWillPop: () async => false, child: …)`.
 
-### 6.3 `lib/widgets/loading/loading_overlay.dart`
+### 5.3 `lib/widgets/loading/loading_overlay.dart`
 
 ```dart
 // Estándar: Componente de carga (engranajes) — v1.0.0
@@ -913,7 +867,7 @@ class LoadingOverlayController {
 }
 ```
 
-### 6.4 Uso en Flutter
+### 5.4 Uso en Flutter
 
 Declarativo (envolviendo el `Scaffold`, para que también cubra la `AppBar`):
 
@@ -957,13 +911,13 @@ Si la app es multilenguaje, pasar el texto traducido en `mensaje` (por ejemplo `
 
 ---
 
-## 7. Patrón de uso y reglas
+## 6. Patrón de uso y reglas
 
 1. **Apagar siempre**, también si hay error: `finalize()` en RxJS, `finally` en `Promise`/`async`/Dart. Si el componente no se apaga, la aplicación queda bloqueada.
 2. **Deshabilitar el botón** que dispara la acción con el mismo flag (`[disabled]="cargandoGuardar"`).
 3. **Un solo** componente de carga por pantalla/componente, con todos sus flags: `*ngIf="cargandoGuardar || cargandoEliminar"`.
 4. Apagar el componente **antes** de mostrar mensajes o modales de error (con `finalize`/`finally` ocurre solo). Con `z-index: 6000` taparía cualquier modal.
-5. **No modificar** colores, tamaños, tiempos ni estructura en los proyectos. Si algo debe cambiar, se cambia en este estándar y en las cuatro implementaciones a la vez.
+5. **No modificar** colores, tamaños, tiempos ni estructura en los proyectos. Si algo debe cambiar, se cambia en este estándar y en las tres implementaciones a la vez.
 
 Ejemplo Angular:
 
@@ -990,7 +944,7 @@ guardar(): void {
 
 ---
 
-## 8. Checklist de QA
+## 7. Checklist de QA
 
 - [ ] Cubre **toda** la ventana, incluidos menú lateral y encabezado.
 - [ ] Los clics sobre la pantalla no tienen efecto mientras está visible.
@@ -1005,9 +959,9 @@ guardar(): void {
 
 ---
 
-## 9. Observaciones conocidas del original
+## 8. Observaciones conocidas del original
 
-El estándar replica el componente **tal cual**, incluidas estas particularidades. Si se decide corregir alguna, se corrige aquí y en las cuatro implementaciones, y se sube la versión del estándar.
+El estándar replica el componente **tal cual**, incluidas estas particularidades. Si se decide corregir alguna, se corrige aquí y en las tres implementaciones, y se sube la versión del estándar.
 
 | # | Observación | Efecto | Corrección sugerida (si se aprueba) |
 |---|---|---|---|
@@ -1023,10 +977,10 @@ El estándar replica el componente **tal cual**, incluidas estas particularidade
 
 ---
 
-## 10. Mantenimiento del estándar
+## 9. Mantenimiento del estándar
 
 - **Versionado** [SemVer](https://semver.org/lang/es/): MAJOR = cambia el aspecto, MINOR = agrega opciones compatibles, PATCH = corrige sin cambiar el aspecto.
-- Todo cambio se aplica a las **cuatro** implementaciones y a la [especificación](#1-especificación-visual) en el mismo cambio.
+- Todo cambio se aplica a las **tres** implementaciones y a la [especificación](#1-especificación-visual) en el mismo cambio.
 - Los trazos SVG (`d="…"`) no se editan a mano; son copia exacta del original.
 - Cada equipo, al copiar el componente, anota en un comentario la versión del estándar usada (`// Estándar componente de carga v1.0.0`).
 
@@ -1034,4 +988,4 @@ El estándar replica el componente **tal cual**, incluidas estas particularidade
 
 | Versión | Fecha | Cambios |
 |---|---|---|
-| 1.0.0 | 2026-10-02 | Primera versión. Réplica exacta del componente `app-loading` del portal Business: Angular + Tailwind, Angular + CSS puro, HTML/JS y Flutter. |
+| 1.0.0 | 2026-10-02 | Primera versión. Réplica exacta del componente `app-loading` del portal Business: Angular + Tailwind, Angular + CSS puro y Flutter. |
